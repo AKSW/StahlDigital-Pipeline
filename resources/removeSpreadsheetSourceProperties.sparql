@@ -1,0 +1,5 @@
+PREFIX spo: <https://w3id.org/steel/ProcessOntology/>
+
+DELETE WHERE {
+    ?s spo:hasSpreadsheetSource ?o .
+}

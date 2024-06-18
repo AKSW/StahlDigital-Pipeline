@@ -1,0 +1,25 @@
+@prefix ex: <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:     <http://example.com/ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+
+ex:PropertyNoCapitaLetterShape
+  a sh:NodeShape ;
+  rdfs:label "Properties names must not start with a capital letter" ;
+  rdfs:comment "For naming conventions, each rdf:Property, owl:DatatypeProperty or owl:ObjectProperty name must not start with a capital letter" ;
+  sh:targetClass rdf:Property, owl:DatatypeProperty, owl:ObjectProperty ;    # Applies to all properties
+  sh:sparql [
+    sh:select """
+    SELECT $this
+    WHERE {
+    $this a ?property .
+    FILTER(?property IN (rdf:Property, owl:DatatypeProperty, owl:ObjectProperty)) .
+    BIND(REPLACE(STR($this), '/[A-Z][A-z0-9]*$', '' ) as ?str1) .
+    FILTER(STR($this) != STR(?str1)) .
+    }
+    """
+] .

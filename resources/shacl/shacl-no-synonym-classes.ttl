@@ -1,0 +1,26 @@
+@prefix ex: <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:     <http://example.com/ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+
+ex:ClassNoSynonymShape
+  a sh:NodeShape ;
+  rdfs:label "Detect synonyms created as classes" ;
+  rdfs:comment "No owl:equivalentClass relationship is allowed between two owl:Class within the same namespace" ;
+  sh:targetClass owl:Class ;    # Applies to all classes
+  sh:sparql [
+    sh:select """
+    SELECT $this
+    WHERE {
+    $this a owl:Class .
+    $this owl:equivalentClass ?other
+    BIND(REPLACE(STR($this), '(#|/)[^#/]*$', '$1' ) as ?ns1) .
+    BIND(REPLACE(STR(?other), '(#|/)[^#/]*$', '$1' ) as ?ns2) .
+    FILTER(?ns1 = ?ns2) .
+    }
+    """
+] .

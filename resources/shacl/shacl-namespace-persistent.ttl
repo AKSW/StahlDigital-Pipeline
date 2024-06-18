@@ -1,0 +1,14 @@
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix ex:     <http://example.com/ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+
+ex:NamespacePersistentShape
+  a sh:NodeShape ;
+  rdfs:label "Namespaces should be persistent" ;
+  rdfs:comment "Namespaces should be called via purl.org or w3id.org" ;
+  sh:targetClass owl:Ontology ;
+  sh:or (
+   [ sh:pattern ".*purl.org.*" ; ]
+   [ sh:pattern ".*w3id.org.*" ; ]
+  ) .

@@ -1,0 +1,126 @@
+---
+prefixes:
+  spo: "https://w3id.org/steel/ProcessOntology/"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  dcterms: "http://purl.org/dc/terms/"
+  skos: "http://www.w3.org/2004/02/skos/core#"
+  owl: "http://www.w3.org/2002/07/owl#"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  emmo: "http://emmo.info/emmo#"
+  pmdco: "https://material-digital.de/pmdco/"
+  qudt: "http://qudt.org/schema/qudt/"
+  qudtUnit: "http://qudt.org/vocab/unit/"
+  semifuli: "http://w3id.org/steel/semifuli/functions.ttl#"
+base: "https://w3id.org/steel/ProcessOntology/"
+
+sources:
+  s01: ["csv/Probentyp.csv~csv"]
+  s02: ["csv/Prüfmaschinen.csv~csv"]
+  s03: ["csv/Stahlsorten.csv~csv"]
+  s04: ["csv/Nakajimaversuch.csv~csv"]
+  s05: ["csv/Scherzugversuch.csv~csv"]
+  s06: ["csv/Kerbzugversuch.csv~csv"]
+  s07: ["csv/Zugversuch.csv~csv"]
+  s08: ["csv/HG-Zugversuch.csv~csv"]
+  s09: ["csv/Bulgeversuch.csv~csv"]
+  s10: ["csv/Norm DIN EN ISO 6892-1.csv~csv"]
+  s11: ["csv/Norm ISO 26203-2.csv~csv"]
+  s12: ["csv/Norm DIN EN ISO 16808.csv~csv"]
+  s13: ["csv/Norm DIN EN ISO 12004-2.csv~csv"]
+  s14: ["csv/Mikrostruktur.csv~csv"]
+  s15: ["csv/Virtuelles Labor.csv~csv"]
+  s16: ["csv/Haertemessung.csv~csv"]
+  s17: ["csv/Component Crash test.csv~csv"]
+  units: ["csv/Units.csv~csv"]
+mappings:
+  ###
+  # mappings for the tensile test
+  ###
+  classes:
+    sources: [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17]
+    subject: "spo:$(Ontological-Concept-Identifier)"
+    po:
+      - ["a", ["owl:Class", "skos:Concept"] ]
+      - ["rdfs:subClassOf", "pmdco:ValueObject~iri"]
+      - [ [ "rdfs:label", "skos:preflabel"] , $(Ontological-Concept-Identifier), "en~lang"]
+      - ["skos:altlabel", "$(Term-English-Label)", "en~lang"]
+      - ["skos:altlabel", "$(Term-German-Label)", "de~lang"]
+      #- ["dcterms:description", "$(Description-English)", "en~lang"]
+      #- ["dcterms:description", "$(Description-German)", "de~lang"]
+      - ["spo:hasDescriptionCitationSource", "$(Description-English-Source)", "en~lang"]
+      - ["spo:hasDescriptionCitationSource", "$(Description-German-Source)", "de~lang"]
+      - ["spo:hasLabelSource", "$(Term-English-Label-Source)", "en~lang"]
+      - ["spo:hasLabelSource", "$(Term-German-Label-Source)", "de~lang"]
+      - ["spo:hasTypicalUnitLabel", "$(Unit)"]
+      - ["spo:hasSymbol", "$(Symbol-Text)", "en~lang"]
+      - ["spo:hasSymbolLatex", "$(Symbol-Latex)", "en~lang"]
+      - ["spo:hasExampleData", "$(Example-Data)"]
+      - ["spo:hasShortId", "$(Ontological-Concept-Identifier)"]
+      - p: "dcterms:description"
+        o:
+          function: "semifuli:citeString"
+          parameters:
+            - ["grel:valueParameter", "$(Description-English)" ] # string to cite
+            - ["grel:valueParameter2", "$(Description-English-Source)" ] # citation source
+            - ["grel:valueParameter3", "authors,Authors" ] # comma sep. list of sources where no citation needs to be marked
+          language: "en"
+      - p: "dcterms:description"
+        o:
+          function: "semifuli:citeString"
+          parameters:
+            - ["grel:valueParameter", "$(Description-German)" ] # string to cite
+            - ["grel:valueParameter2", "$(Description-German-Source)" ] # citation source
+            - ["grel:valueParameter3", "authors,Authors" ] # comma sep. list of sources where no citation needs to be marked
+          language: "de"
+      - p: ["rdfs:seeAlso", "skos:related"]
+        o:
+          function: "semifuli:splitAndExpandPrefixes"
+          parameters:
+            - ["grel:valueParameter", "$(is-related-to)"]
+            - ["grel:p_string_sep", ";"]
+          type: iri
+      - p: "spo:isBasedOn"
+        o:
+          function: "semifuli:splitAndExpandPrefixes"
+          parameters:
+            - ["grel:valueParameter", "$(is-based-on)"]
+            - ["grel:p_string_sep", ";"]
+          type: iri
+      - ["spo:hasSpreadsheetSource", "file=$(xlsx2owl_filename); sheet=$(xlsx2owl_sheetname); row=$(xlsx2owl_rowNumber)", "en~lang"]
+## TODO try to add subclass relation linking to TimeSeriesData, IdentifierMetaData, QuantityMetaData according to category and unit
+
+  ###
+  # define related ObjectProperties
+  ###
+  ObjectProperties:
+    sources: [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16, s17]
+    subject: "spo:has$(Ontological-Concept-Identifier)_Object"
+    po:
+      - [ "a", ["rdf:Property", "owl:ObjectProperty"]]
+      - [ [ "rdfs:label", "skos:preflabel"] , "has$(Ontological-Concept-Identifier)", "en~lang"]
+      - [ "rdfs:range" , "spo:$(Ontological-Concept-Identifier)~iri"]
+      ## TODO: add domain
+  # DatatypePropertiesWithoutUnits:
+  #   sources: [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15, s16]
+  #   subject: "spo:has$(Ontological-Concept-Identifier)"
+  #   po:
+  #     - [ "a", ["rdf:Property", "owl:DatatypeProperty"] ]
+  #     - [ [ "rdfs:label", "skos:preflabel"] , "has$(Ontological-Concept-Identifier)", "en~lang"]
+  #     ## TODO: maybe add domain and range(maybe xsd:string?)
+
+  UnitMapping:
+    sources: [units]
+    subject: 
+      function: "semifuli:expandPrefix"
+      parameters: 
+      - ["grel:valueParameter", "$(Unit-ID)" ]
+    ## the following lines help only for debugging, should be removed otherwise
+    po:
+      - [ "a", "qudt:Unit~iri"]
+      - [ "spo:hasUnitLabel", "$(Unit-Name)"]
+      - p: "spo:hasShortId"
+        o: 
+          function: "semifuli:getIriSuffix"
+          parameters:
+            - ["grel:valueParameter", "$(Unit-ID)"]

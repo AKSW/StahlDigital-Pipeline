@@ -1,0 +1,121 @@
+---
+prefixes:
+  spo: "https://w3id.org/steel/ProcessOntology/"
+  rdfs: "http://www.w3.org/2000/01/rdf-schema#"
+  dcterms: "http://purl.org/dc/terms/"
+  skos: "http://www.w3.org/2004/02/skos/core#"
+  owl: "http://www.w3.org/2002/07/owl#"
+  grel: "http://users.ugent.be/~bjdmeest/function/grel.ttl#"
+  xsd: "http://www.w3.org/2001/XMLSchema#"
+  emmo: "http://emmo.info/emmo#"
+  pmdco: "https://material-digital.de/pmdco/"
+  qudt: "http://qudt.org/schema/qudt/"
+  qudtUnit: "http://qudt.org/vocab/unit/"
+  semifuli: "http://w3id.org/steel/semifuli/functions.ttl#"
+base: "https://w3id.org/steel/ProcessOntology/"
+
+sources:
+  s01: ["csv/LS-Dyna Mat024.csv~csv"]
+  s02: ["csv/LS-Dyna Mat224.csv~csv"]
+  s03: ["csv/Failure (GISSMO).csv~csv"]
+  s04: ["csv/Damask.csv~csv"]
+  units: ["csv/Units.csv~csv"]
+
+###
+# mappings for simulation software concepts
+###
+mappings:
+  ###
+  # define concepts & classes
+  ###
+  classes:
+    sources: [s01, s02, s03, s04]  
+    
+    subject: "spo:$(Ontological-Concept-ID)"
+    po:
+      - ["a", ["owl:Class", "skos:Concept"] ]
+      - ["rdfs:subClassOf", "pmdco:ValueObject~iri"]
+      - [ [ "rdfs:label", "skos:preflabel"] , $(Ontological-Concept-ID), "en~lang"]
+      - ["skos:altlabel", "$(Term-English-US-Label)", "en~lang"]
+      - ["skos:altlabel", "$(Term-German-Label)", "de~lang"]
+      - ["spo:hasLabelSource", "$(Term-English-US-Source)", "en~lang"]
+      - ["spo:hasLabelSource", "$(Term-German-Source)", "de~lang"]
+      - ["spo:hasDescriptionCitationSource", "$(Description-Source)", "en~lang"]
+      - ["spo:hasDescriptionCitationSource", "$(Description-Source-German)", "de~lang"]
+      #- ["dcterms:description", "$(Description)", "en~lang"]
+      #- ["dcterms:description", "$(Description-German)", "de~lang"]
+      - ["spo:hasLabelSource", "$(Term-English-US-Source)", "en~lang"]
+      - ["spo:hasLabelSource", "$(Term-German-Source)", "de~lang"]
+      - ["spo:hasTypicalUnitLabel", "$(Unit)"]
+      - ["spo:hasSymbol", "$(Symbol-Text)", "en~lang"]
+      - ["spo:hasSymbolLatex", "$(Symbol-Latex)", "en~lang"]
+      - ["spo:hasExampleData", "$(Example-Data)"]
+      - ["spo:hasShortId", "$(Ontological-Concept-ID)"]
+      - p: "dcterms:description"
+        o:
+          function: "semifuli:citeString"
+          parameters:
+            - ["grel:valueParameter", "$(Description)" ] # string to cite
+            - ["grel:valueParameter2", "$(Description-Source)" ] # citation source
+            - ["grel:valueParameter3", "authors,Authors" ] # comma sep. list of sources where no citation needs to be marked
+          language: "en"
+      - p: "dcterms:description"
+        o:
+          function: "semifuli:citeString"
+          parameters:
+            - ["grel:valueParameter", "$(Description-German)" ] # string to cite
+            - ["grel:valueParameter2", "$(Description-Source-German)" ] # citation source
+            - ["grel:valueParameter3", "authors,Authors" ] # comma sep. list of sources where no citation needs to be marked
+          language: "de"
+      - p: ["rdfs:seeAlso", "skos:related"]
+        o:
+          function: "semifuli:splitAndExpandPrefixes"
+          parameters:
+            - ["grel:valueParameter", "$(related-to)"]
+            - ["grel:p_string_sep", ";"]
+          type: iri
+      - p: "spo:isBasedOn"
+        o:
+          function: "semifuli:splitAndExpandPrefixes"
+          parameters:
+            - ["grel:valueParameter", "$(is-based-on)"]
+            - ["grel:p_string_sep", ";"]
+          type: iri
+      - ["spo:hasSpreadsheetSource", "file=$(xlsx2owl_filename); sheet=$(xlsx2owl_sheetname); row=$(xlsx2owl_rowNumber)", "en~lang"]
+  ###
+  # define related ObjectProperties
+  ###
+  ObjectProperties:
+    sources: [s01, s02, s03, s04]
+    
+    subject: "spo:has$(Ontological-Concept-ID)_Object"
+    po:
+      - [ "a", ["owl:ObjectProperty"]]
+      #- [ "rdfs:subPropertyOf", ["owl:ObjectProperty"]]
+      - [ [ "rdfs:label", "skos:preflabel"] , "has$(Ontological-Concept-ID)", "en~lang"]
+      - [ "rdfs:range" , "spo:$(Ontological-Concept-ID)~iri" ]
+  # DatatypePropertiesWithoutUnits:
+  #   sources: [s01, s02, s03, s04]
+  #   subject: "spo:has$(Ontological-Concept-ID)"
+  #   po:
+  #     - [ "a", ["rdf:Property", "owl:DatatypeProperty"] ]
+  #     - [ [ "rdfs:label", "skos:preflabel"] , "has$(Ontological-Concept-ID)", "en~lang"]
+
+  UnitMapping:
+    sources: [units]
+    subject: 
+      function: "semifuli:expandPrefix"
+      parameters: 
+      - ["grel:valueParameter", "$(Unit-ID)" ]
+    ## the following lines help only for debugging, should be removed otherwise
+    po:
+      - [ "a", "qudt:Unit~iri"]
+      - [ "spo:hasUnitLabel", "$(Unit-Name)"]
+      - p: "spo:hasShortId"
+        o: 
+          function: "semifuli:getIriSuffix"
+          parameters:
+            - ["grel:valueParameter", "$(Unit-ID)"]
+
+## TODO try to add subclass relation linking to TimeSeriesData, IdentifierMetaData, QuantityMetaData according to category and unit
+## TODO try to use example data: probably needs some cleanup for value "-"

@@ -1,0 +1,42 @@
+@prefix ex: <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:     <http://example.com/ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+
+ex:SuperclassShape
+  a sh:NodeShape ;
+  rdfs:label "Superclass shape" ;
+  rdfs:comment "Each class must have at most one superclass." ;
+  sh:targetClass owl:Class ;    # Applies to all classes
+  sh:sparql [
+    a sh:SPARQLConstraint ;
+    sh:prefixes [
+      sh:declare [
+        sh:prefix    "rdf" ;
+        sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#" ;
+      ] ;
+      sh:declare [
+        sh:prefix    "rdfs" ;
+        sh:namespace "http://www.w3.org/2000/01/rdf-schema##" ;
+      ] ;
+    ] ;
+    sh:select """
+    SELECT DISTINCT $this
+    WHERE {
+    $this rdf:type owl:Class .
+    $this rdfs:subClassOf ?v1 .
+    $this rdfs:subClassOf ?v2 .
+    FILTER NOT EXISTS {?v1 rdfs:subClassOf ?v2 }.
+    FILTER NOT EXISTS {?v2 rdfs:subClassOf ?v1 }.
+    FILTER(?v1 != ?v2) .
+    FILTER(?v1 != owl:Thing) .
+    FILTER(?v2 != owl:Thing) .
+    FILTER($this != ?v1) .
+    FILTER($this != ?v2) .
+    }
+    """
+] .

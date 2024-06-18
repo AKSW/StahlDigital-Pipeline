@@ -1,0 +1,64 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX spo: <https://w3id.org/steel/ProcessOntology/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+INSERT { # add mappings for typicalUnitLabel
+   ?s spo:hasTypicalUnit ?unit .
+   # ?s spo:sparqlMatched1 "1" .
+} WHERE {
+   ?s spo:hasTypicalUnitLabel ?label .
+   ?unit spo:hasUnitLabel  ?label .
+   ?unit a qudt:Unit .
+}
+
+
+INSERT { # add mappings for unitLabel
+    ?s spo:hasUnit ?unit .
+    # ?s spo:sparqlMatched2 "2"
+} WHERE {
+    #?s a owl:Class . # we want to remove cited comments from all subject types
+    ?s spo:hasUnitLabel ?label .
+    ?unit spo:hasUnitLabel  ?label .
+    ?unit a qudt:Unit .
+    MINUS { ?s a qudt:Unit . }
+}
+
+INSERT { # add unit linked properties for concepts with a typical unit
+    ?propIri a rdf:Property, owl:DatatypeProperty ;
+        #rdfs:subPropertyOf spo:has$(Ontological-Concept-ID)
+        rdfs:label ?propLabel ;
+        spo:hasUnit ?unit ;
+        spo:hasUnitLabel ?unitLabel ;
+        rdfs:seeAlso ?s, ?propObjIri ;
+        .
+} WHERE {
+  ?s a skos:Concept .
+  ?s rdfs:label ?label .
+  ?s spo:hasTypicalUnitLabel ?unitLabel .
+  ?s spo:hasShortId ?sId .
+  ?unit spo:hasUnitLabel ?unitLabel .
+  ?unit a qudt:Unit .
+  ?unit spo:hasShortId ?unitShortId .
+  BIND( CONCAT( "has ", ?label) AS ?propLabel) .
+  BIND( CONCAT( "https://w3id.org/steel/ProcessOntology/has", ?sId) AS ?propIriPrefix ) .
+  BIND( IRI( CONCAT( ?propIriPrefix, "_", ?unitShortId) ) AS ?propIri ) .
+  BIND( IRI( CONCAT( ?propIriPrefix, "_Object") ) AS ?propObjIri ) .
+}
+
+INSERT { # add unit less properties for concepts without a typical unit
+    ?propIri a rdf:Property, owl:DatatypeProperty ;
+        rdfs:label ?propLabel ;
+        rdfs:seeAlso ?s, ?propObjIri ;
+        .
+} WHERE {
+  ?s a skos:Concept .
+  ?s rdfs:label ?label .
+  ?s spo:hasShortId ?sId .
+  MINUS { ?s spo:hasTypicalUnitLabel ?unitLabel } .
+  BIND( CONCAT( "has ", ?label) AS ?propLabel) .
+  BIND( CONCAT( "https://w3id.org/steel/ProcessOntology/has", ?sId) AS ?propIriPrefix ) .
+  BIND( IRI( ?propIriPrefix) AS ?propIri ) .
+  BIND( IRI( CONCAT( ?propIriPrefix, "_Object") ) AS ?propObjIri ) .
+}

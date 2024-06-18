@@ -1,0 +1,133 @@
+# Build the docker image and publish it to gitlabs repository
+
+image: 
+  name: registry.hub.docker.com/nextflow/nextflow:22.04.5
+  
+
+services: 
+  # - docker:20.10.14-dind
+  - name: registry.hub.docker.com/library/docker:20.10.14-dind
+    command: ["--tls=false"]
+    alias: docker
+
+variables:
+  DOCKER_HOST: tcp://docker:2375/
+
+# nextflow-mock:
+#   stage: deploy
+#   environment:
+#     name: mock
+#     url: $PUBLISH_URL
+
+#   script:
+#     - echo $ARTIFACT_REPOSITORY
+#     - echo $ARTIFACT_REPOSITORY_TOKEN
+
+#     - echo $CI_JOD_IMAGE
+#     - echo $CI_STAHL_REGISTRY_TOKEN
+#     - echo $CI_STORE_TOKEN
+#     - echo $CI_XLSX2OWL_IMAGE
+
+#     - echo $DSMS_PASSWORD
+#     - echo $DSMS_USER
+
+#     - echo $INPUT_FILE
+
+#     - echo $PUBLISH_REPOSITORY_KEY
+#     - echo $PUBLISH_REPOSITORY
+#     - echo $PUBLISH_URL
+
+#     - echo $QUITSTORE_TOKEN
+#     - echo $QUITSTORE_USER
+
+#     - nextflow run . --xlsxUrl=$INPUT_FILE
+
+nextflow:
+  # stage: deploy
+  stage: build
+  artifacts:
+    when: always
+    paths:
+      - $ARTIFACT_FOLDER/*
+      - pipeline_trace.txt
+      - .nextflow.log
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main"
+  allow_failure:
+    exit_codes: # User defined exit code
+      - 22
+
+  script:
+    - echo $ARTIFACT_REPOSITORY
+    - echo $ARTIFACT_REPOSITORY_TOKEN
+
+    - echo $CI_JOD_IMAGE
+    - echo $CI_STAHL_REGISTRY_TOKEN
+    - echo $CI_STORE_TOKEN
+    - echo $CI_XLSX2OWL_IMAGE
+
+    - echo $DSMS_PASSWORD
+    - echo $DSMS_USER
+
+    - echo $INPUT_FILE
+
+    - echo $PUBLISH_REPOSITORY_KEY
+    - echo $PUBLISH_REPOSITORY_VERSIONING_KEY
+    - echo $PUBLISH_REPOSITORY
+    - echo $PUBLISH_URL
+
+    - echo $QUITSTORE_TOKEN
+    - echo $QUITSTORE_USER
+
+    - echo $KNOWN_HOSTS
+
+    - nextflow run . --xlsxUrl=$INPUT_FILE --publish=true
+    - _status=$?
+    - if [ ! $_status ]; then exit $_status; fi;
+    - if [ ! "$(grep -e 'v2d.*\s0' pipeline_trace.txt)" ]; then exit 22; fi;
+    - cat pipeline_trace.txt
+
+nextflow-main:
+  stage: deploy
+  artifacts:
+    when: always
+    paths:
+      - $ARTIFACT_FOLDER/*
+      - pipeline_trace.txt
+      - .nextflow.log
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  environment:
+    name: main
+    url: $PUBLISH_URL
+  allow_failure:
+    exit_codes: # User defined exit code
+      - 22
+
+  script:
+    - echo $ARTIFACT_REPOSITORY
+    - echo $ARTIFACT_REPOSITORY_TOKEN
+
+    - echo $CI_JOD_IMAGE
+    - echo $CI_STAHL_REGISTRY_TOKEN
+    - echo $CI_STORE_TOKEN
+    - echo $CI_XLSX2OWL_IMAGE
+
+    - echo $DSMS_PASSWORD
+    - echo $DSMS_USER
+
+    - echo $INPUT_FILE
+
+    - echo $PUBLISH_REPOSITORY_KEY
+    - echo $PUBLISH_REPOSITORY_VERSIONING_KEY
+    - echo $PUBLISH_REPOSITORY
+    - echo $PUBLISH_URL
+
+    - echo $QUITSTORE_TOKEN
+    - echo $QUITSTORE_USER
+
+    - nextflow run . --xlsxUrl=$INPUT_FILE --publish=true
+    - _status=$?
+    - if [ ! $_status ]; then exit $_status; fi;
+    - if [ ! "$(grep -e 'v2d.*\s0' pipeline_trace.txt)" ]; then exit 22; fi;
+    - cat pipeline_trace.txt
